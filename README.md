@@ -1,6 +1,6 @@
 ## My Project
 
-TODO: Fill this README out!
+This is a sample code for .NET AIML workshop
 
 Be sure to:
 
