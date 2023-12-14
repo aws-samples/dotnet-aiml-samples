@@ -1,0 +1,1 @@
+﻿TRUNCATE TABLE kb_article
