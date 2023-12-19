@@ -12,7 +12,7 @@ namespace Samples.Common
         {
             //Make sure you create a profile using AWS CLI and save access key & secrete key
             //watch https://www.youtube.com/watch?v=fwtmTMf53Ek for more information
-            string profileName = "mydevprofile";
+            string profileName = "my-dev-profile";
             var chain = new CredentialProfileStoreChain();
             AWSCredentials awsCredentials = null;
             if (!chain.TryGetAWSCredentials(profileName, out awsCredentials))

@@ -19,6 +19,7 @@ namespace Samples.Bedrock.Samples
             Console.WriteLine($"Running {this.GetType().Name} ###############");
             AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
             InvokeModelWithResponseStreamRequest request = new InvokeModelWithResponseStreamRequest();
+            
             request.ModelId = "anthropic.claude-v2";
             request.ContentType = "application/json";
             request.Accept = "application/json";
