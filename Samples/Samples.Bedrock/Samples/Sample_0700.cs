@@ -11,11 +11,11 @@ using System.Text;
 namespace Samples.Bedrock.Samples
 {
     //Example class where you can get embeddings from a query, compare it with embeddings saved in a postgres table, build a context and get an answer for a question based on the context. 
-    internal class Sample6 : ISample
+    internal class Sample_0700 : ISample
     {
         AWSCredentials _credentials;
 
-        internal Sample6(AWSCredentials aWSCredentials)
+        internal Sample_0700(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
         }

@@ -7,10 +7,10 @@ using Samples.Common;
 namespace Samples.Bedrock.Samples
 {
     //An example class to query Anthropic model with streaming using Amazon Bedrock
-    internal class Sample2:ISample
+    internal class Sample_0200:ISample
     {
         AWSCredentials _credentials;
-        internal Sample2(AWSCredentials aWSCredentials)
+        internal Sample_0200(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
         }

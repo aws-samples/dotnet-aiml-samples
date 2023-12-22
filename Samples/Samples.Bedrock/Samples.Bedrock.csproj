@@ -22,4 +22,10 @@
     <ProjectReference Include="..\Samples.Common\Samples.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="DataSources\Images\grassland.jpg">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

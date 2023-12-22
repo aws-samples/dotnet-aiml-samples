@@ -71,5 +71,11 @@ namespace Samples.Common
             }
 
         }
+
+        public static string ConverToBase64EncodedString(string fileName)
+        {
+            byte[] file=File.ReadAllBytes(fileName);
+            return Convert.ToBase64String(file);
+        }
     }
 }

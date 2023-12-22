@@ -17,7 +17,7 @@ namespace Samples.Bedrock.Samples
 {
 
     // example class where you can get embeddings from Amazon bedrock and save them in Postgres as pg_vector
-    internal class Sample5 : ISample
+    internal class Sample_0600 : ISample
     {
         ProgressBarOptions _progressBarOption=new ProgressBarOptions()
         {
@@ -29,7 +29,7 @@ namespace Samples.Bedrock.Samples
         };
         AWSCredentials _credentials;
 
-        internal Sample5(AWSCredentials aWSCredentials)
+        internal Sample_0600(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
         }

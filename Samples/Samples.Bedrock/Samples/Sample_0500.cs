@@ -7,10 +7,10 @@ using Samples.Common;
 namespace Samples.Bedrock.Samples
 {
     //an example class to generate embedding vectors
-    internal class Sample4 : ISample
+    internal class Sample_0500 : ISample
     {
         AWSCredentials _credentials;
-        internal Sample4(AWSCredentials aWSCredentials)
+        internal Sample_0500(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
         }
@@ -33,7 +33,7 @@ namespace Samples.Bedrock.Samples
             if (jsonResult["embedding"] != null)
             {
                 var array = jsonResult["embedding"].ToObject<double[]>();
-                Console.Write(array);
+                Console.Write(array.Length);
 
             }
  
