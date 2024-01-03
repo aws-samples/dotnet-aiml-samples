@@ -43,7 +43,7 @@ namespace Samples.Bedrock.Samples
 
             //To save time, we only analyze 3 Charles Dickens books
             selectedKBList.AddRange(dickensProvider.GetKBArticles().Take(3).ToList());
-            //To save time, we only analuze all sample wiki articles
+            //To save time, we only analyze all sample wiki articles
             selectedKBList.AddRange(wikipediaProvider.GetKBArticles());
 
 

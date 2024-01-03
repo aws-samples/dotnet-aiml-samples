@@ -19,8 +19,8 @@ namespace Samples.Bedrock
             //s0100.Run();
             //s0200.Run();
             //s0300.Run();
-            s0400.Run();
-            //s0500.Run();
+            //s0400.Run();
+            s0500.Run();
             //s0600.Run();
 
         }

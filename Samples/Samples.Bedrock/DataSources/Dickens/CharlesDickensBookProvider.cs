@@ -24,7 +24,7 @@ namespace Samples.Bedrock.KBSources.Dickens
         }
 
 
-        private List<TSVRecord> GetBookPaths()
+        private List<BookRecord> GetBookPaths()
         {
             string dataFolder = @"C:\Temp\SampleData\Dickens\";
             string catalog = Path.Combine(dataFolder, "metadata.tsv");
@@ -39,7 +39,7 @@ namespace Samples.Bedrock.KBSources.Dickens
             {
                 using (var csv = new CsvReader(sr, config))
                 {
-                    var data = csv.GetRecords<TSVRecord>().ToList();
+                    var data = csv.GetRecords<BookRecord>().ToList();
                     data.ForEach(i => { i.Path = Path.Combine(dataFolder, i.Path); });
                     return data;
                 }

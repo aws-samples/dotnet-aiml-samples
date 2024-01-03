@@ -3,6 +3,7 @@ using Amazon.BedrockRuntime;
 using Amazon.Runtime;
 using Newtonsoft.Json.Linq;
 using Samples.Common;
+using System.Collections.Immutable;
 
 namespace Samples.Bedrock.Samples
 {
@@ -30,13 +31,15 @@ namespace Samples.Bedrock.Samples
             string stringResult = Utility.GetStringFromStream(result.Body);
 
             JObject jsonResult = JObject.Parse(stringResult);
-            if (jsonResult["embedding"] != null)
-            {
-                var array = jsonResult["embedding"].ToObject<double[]>();
-                Console.Write(array.Length);
 
+            var array = jsonResult["embedding"]?.ToObject<double[]>();
+            if (array != null)
+            {
+                Console.WriteLine("Number of dimensions:"+array.Length);
+                Console.Write("[");
+                array.ToList().ForEach(x => Console.Write($"{x},"));
+                Console.WriteLine("]");
             }
- 
             Console.WriteLine($"End of {this.GetType().Name} ############");
         }
     }
