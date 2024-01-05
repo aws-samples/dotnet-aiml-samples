@@ -3,16 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.8.34322.80
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Bedrock", "Samples.Bedrock\Samples.Bedrock.csproj", "{60D271B9-9BB0-46CF-9CB5-767B3A73F954}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Bedrock", "Samples.Bedrock\Samples.Bedrock.csproj", "{60D271B9-9BB0-46CF-9CB5-767B3A73F954}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Polly", "Samples.Polly\Samples.Polly.csproj", "{22DE8B08-5102-4AEA-8461-5985455C14C9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Polly", "Samples.Polly\Samples.Polly.csproj", "{22DE8B08-5102-4AEA-8461-5985455C14C9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Common", "Samples.Common\Samples.Common.csproj", "{5C511881-9C14-48D1-B03E-1E396E98B965}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Common", "Samples.Common\Samples.Common.csproj", "{5C511881-9C14-48D1-B03E-1E396E98B965}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B8C7752-C62F-4791-8863-A7C1D7361DE2}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Bedrock.Rag", "Samples.Bedrock.Rag\Samples.Bedrock.Rag.csproj", "{6BA5527E-76BC-45B3-8015-5F8C7D2A6469}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +34,10 @@ Global
 		{5C511881-9C14-48D1-B03E-1E396E98B965}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5C511881-9C14-48D1-B03E-1E396E98B965}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5C511881-9C14-48D1-B03E-1E396E98B965}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6BA5527E-76BC-45B3-8015-5F8C7D2A6469}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6BA5527E-76BC-45B3-8015-5F8C7D2A6469}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6BA5527E-76BC-45B3-8015-5F8C7D2A6469}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6BA5527E-76BC-45B3-8015-5F8C7D2A6469}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -8,10 +8,8 @@
   </PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AWSSDK.Bedrock" Version="3.7.301.7" />
-		<PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.7" />
-		<PackageReference Include="CsvHelper" Version="30.0.1" />
-		<PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.0.0-beta6" />
+		<PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.19" />
+		<PackageReference Include="Microsoft.SemanticKernel.Core" Version="1.0.1" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 		<PackageReference Include="Npgsql" Version="8.0.1" />
 		<PackageReference Include="Pgvector" Version="0.2.0" />

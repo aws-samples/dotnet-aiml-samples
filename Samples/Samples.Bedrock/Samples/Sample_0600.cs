@@ -1,34 +1,19 @@
-﻿using Amazon.BedrockRuntime;
-using Amazon.BedrockRuntime.Model;
+﻿using Amazon.BedrockRuntime.Model;
+using Amazon.BedrockRuntime;
 using Amazon.Runtime;
-using Microsoft.SemanticKernel.Text;
 using Newtonsoft.Json.Linq;
-using Npgsql;
-using Pgvector;
-using System.Collections.Concurrent;
-using ShellProgressBar;
 using Samples.Common;
-using Samples.Bedrock.KBSources;
-using Samples.Bedrock.KBSources.Dickens;
-using Samples.Bedrock.KBSources.Wikipedia;
+using Npgsql;
 using Samples.Bedrock.Model;
+using Pgvector;
+using Microsoft.SemanticKernel.Text;
 
 namespace Samples.Bedrock.Samples
 {
-
-    // example class where you can get embeddings from Amazon bedrock and save them in Postgres as pg_vector
+    //an example class to generate embedding vectors
     internal class Sample_0600 : ISample
     {
-        ProgressBarOptions _progressBarOption=new ProgressBarOptions()
-        {
-            ProgressCharacter = '-',
-            BackgroundColor = ConsoleColor.Yellow,
-            ForegroundColor = ConsoleColor.Red,
-            ForegroundColorDone=ConsoleColor.Green,
-            CollapseWhenFinished=true
-        };
         AWSCredentials _credentials;
-
         internal Sample_0600(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
@@ -36,121 +21,76 @@ namespace Samples.Bedrock.Samples
         public void Run()
         {
             Console.WriteLine($"Running {this.GetType().Name} ###############");
-            IKBProvider dickensProvider = new CharlesDickensBookProvider();
-            IKBProvider wikipediaProvider = new WikipediaProvider();
 
-            List<KBArticle> selectedKBList = new List<KBArticle>();
+            string bookPath = @"C:\Temp\SampleData\Dickens\Oliver Twist.txt";
+            string bookContent = File.ReadAllText(bookPath);
 
-            //To save time, we only analyze 3 Charles Dickens books
-            selectedKBList.AddRange(dickensProvider.GetKBArticles().Take(3).ToList());
-            //To save time, we only analyze all sample wiki articles
-            selectedKBList.AddRange(wikipediaProvider.GetKBArticles());
+#pragma warning disable SKEXP0055 // Type is for evaluation purposes only and is subject to change or removal in future updates. 
+            List<string> lines = TextChunker.SplitPlainTextLines(bookContent, 100);
+            List<string> paragraphList = TextChunker.SplitPlainTextParagraphs(lines, 2000);
+#pragma warning restore SKEXP0055 // Type is for evaluation purposes only and is subject to change or removal in future updates. 
 
+            List<ParagraphEmbeddingInfo> paragraphEmbedding = GetEmbeddings(paragraphList);
+            SaveEmbeddingToDB("Oliver Twist", paragraphEmbedding);
 
-            string connectionString = Utility.GetDBConnectionString("KBStoreDB");
+            Console.WriteLine($"End of {this.GetType().Name} ############");
+        }
+
+        private List<ParagraphEmbeddingInfo> GetEmbeddings(List<string> paragraphList)
+        {
+            List<ParagraphEmbeddingInfo> embeddingList = new List<ParagraphEmbeddingInfo>();
+            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
+
+            foreach (var pInfo in paragraphList.Select((content, index) => (content, index)))
+            {
+                Console.WriteLine("Generating embeddings for paragraph " + pInfo.index);
+                InvokeModelRequest request = new InvokeModelRequest();
+                request.ModelId = "amazon.titan-embed-text-v1";
+                request.ContentType = "application/json";
+                request.Accept = "application/json";
+
+                string body = "{\"inputText\":" + Newtonsoft.Json.JsonConvert.ToString(pInfo.content) + "}";
+                request.Body = Utility.GetStreamFromString(body);
+
+                var result = client.InvokeModelAsync(request).Result;
+                string stringResult = Utility.GetStringFromStream(result.Body);
+
+                JObject jsonResult = JObject.Parse(stringResult);
+
+                var array = jsonResult["embedding"]?.ToObject<float[]>();
+                ParagraphEmbeddingInfo pei= new ParagraphEmbeddingInfo();
+                pei.ParagraphId = pInfo.index;
+                pei.Embedding = array;
+                embeddingList.Add(pei);
+            }
+            return embeddingList;
+        }
+        private void SaveEmbeddingToDB(string bookName, List<ParagraphEmbeddingInfo> embeddingList)
+        {
+            string connectionString = Utility.GetDBConnectionString("MySampleDB");
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.UseVector();
-
-            var parallelOption = new ParallelOptions { MaxDegreeOfParallelism = 4 };
-
 
             using (var dataSource = dataSourceBuilder.Build())
             {
                 using (var connection = dataSource.OpenConnection())
                 {
-                    using (var pbLevel1 = new ProgressBar(selectedKBList.Count, "Total progress",_progressBarOption))
+                    foreach (var item in embeddingList)
                     {
-                        Parallel.ForEach(selectedKBList, parallelOption, (kb, state, index) =>
+                        using (var cmd = new NpgsqlCommand("INSERT INTO my_book(book_name,paragraph_id,embedding) VALUES (:book_name,:paragraph_id,:embedding)", connection))
                         {
-                            using(var pbLevel2=pbLevel1.Spawn(2,$"Title:{kb.Title}", _progressBarOption))
-                            {
-                                List<ParagraphEmbeddingInfo> embeddings = GetEmbeddings(kb.Content, pbLevel2);
-                                pbLevel2.Tick();
-                                SaveEmbeddingToDB(embeddings, kb, connection, pbLevel2);
-                                pbLevel2.Tick();
-                            }
-                            pbLevel1.Tick();
-                        });
-                        pbLevel1.WriteLine("Done");
+                            Console.WriteLine("Saving embeddings for paragraph " + item.ParagraphId);
+                            cmd.Parameters.AddWithValue("book_name", bookName);
+                            cmd.Parameters.AddWithValue("paragraph_id", item.ParagraphId);
 
-                    }
-
-             
-                }
-                Console.WriteLine($"End of {this.GetType().Name} ############");
-            }
-        }
-        private List<ParagraphEmbeddingInfo> GetEmbeddings(string content, IProgressBar progressBar)
-        {
-            ConcurrentBag<ParagraphEmbeddingInfo> embeddingBag = new ConcurrentBag<ParagraphEmbeddingInfo>();
-
-            List<string> lines = TextChunker.SplitPlainTextLines(content, 100);
-            List<string> paragraphList = TextChunker.SplitPlainTextParagraphs(lines, 500);
-            var parallelOption = new ParallelOptions { MaxDegreeOfParallelism = 10 };
-
-            using (var pbChild = progressBar.Spawn(paragraphList.Count, $"Getting embeddings for {paragraphList.Count} paragraph(s)", _progressBarOption))
-            {
-                Parallel.ForEach(paragraphList, parallelOption, (paragraph, state, index) =>
-                {
-                    if(!string.IsNullOrEmpty(paragraph))
-                    {
-                        AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
-                        InvokeModelRequest request = new InvokeModelRequest();
-                        request.ModelId = "amazon.titan-embed-text-v1";
-                        request.ContentType = "application/json";
-                        request.Accept = "application/json";
-
-                        string body = "{\"inputText\":" + Newtonsoft.Json.JsonConvert.ToString(paragraph) + "}";
-                        request.Body = Utility.GetStreamFromString(body);
-
-                        var result = client.InvokeModelAsync(request).Result;
-                        string stringResult = Utility.GetStringFromStream(result.Body);
-
-                        JObject jsonResult = JObject.Parse(stringResult);
-                        if (jsonResult["embedding"] != null)
-                        {
-                            var array = jsonResult["embedding"].ToObject<float[]>();
-                            ParagraphEmbeddingInfo embeddingInfo = new ParagraphEmbeddingInfo();
-                            embeddingInfo.ParagraphId = (int)index;
-                            embeddingInfo.Paragraph = paragraph;
-                            embeddingInfo.Embedding = array;
-                            embeddingBag.Add(embeddingInfo);
-                        }
-                    }
-                   
-                    pbChild.Tick();
-                });
-            }
-            return embeddingBag.OrderBy(e => e.ParagraphId).ToList();
-        }
-        private void SaveEmbeddingToDB(List<ParagraphEmbeddingInfo> embeddingList, KBArticle kbArticle, NpgsqlConnection connection, IProgressBar progressBar)
-        {
-            string tabs = new string(' ', 256);
-            lock (this)
-            {
-                using (var pbChild = progressBar.Spawn(embeddingList.Count, $"Saving {embeddingList.Count} row(s)", _progressBarOption))
-                {
-                    foreach (var item in embeddingList.Select((embeddingInfo, index) => (embeddingInfo, index)))
-                    {
-                        using (var cmd = new NpgsqlCommand("INSERT INTO kb_article (title,paragraph_id,paragraph,source,embedding) VALUES (:title,:paragraph_id,:paragraph,:source,:embedding)", connection))
-                        {
-                            cmd.Parameters.AddWithValue("title", kbArticle.Title);
-                            cmd.Parameters.AddWithValue("paragraph_id", item.embeddingInfo.ParagraphId);
-                            cmd.Parameters.AddWithValue("paragraph", item.embeddingInfo.Paragraph);
-                            cmd.Parameters.AddWithValue("source", kbArticle.Source);
-                            var embedding = new Vector(item.embeddingInfo.Embedding);
+                            var embedding = new Vector(item.Embedding);
                             cmd.Parameters.AddWithValue("embedding", embedding);
                             cmd.ExecuteNonQuery();
-                            pbChild.Tick();
                         }
                     }
                 }
             }
-
-
         }
-     
-
     }
 }

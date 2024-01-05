@@ -1,5 +1,9 @@
 ﻿using Newtonsoft.Json;
-using Samples.Bedrock.Model;
+using Samples.Bedrock.Rag.DataProviders;
+using Samples.Bedrock.Rag.DataProviders.Wikipedia;
+
+
+using Samples.Bedrock.Rag.Model;
 
 namespace Samples.Bedrock.KBSources.Wikipedia
 {
@@ -7,7 +11,7 @@ namespace Samples.Bedrock.KBSources.Wikipedia
     {
         public IEnumerable<KBArticle> GetKBArticles()
         {
-            string filePath = @"C:\Temp\SampleData\Wikipedia\fec7d46b-b2ba-4a87-b74f-ff6855ffb734.json";
+            var filePath = @"C:\Temp\SampleData\Wikipedia\wikipedia-sample-data.json";
             using(StreamReader reader = new StreamReader(filePath))
             {
                 string content=reader.ReadToEnd();      

@@ -1,4 +1,4 @@
-﻿namespace Samples.Bedrock.KBSources.Wikipedia
+﻿namespace Samples.Bedrock.Rag.DataProviders.Wikipedia
 {
     internal class WikiJasonElement
     {

@@ -4,24 +4,24 @@ using Amazon.Runtime;
 using Newtonsoft.Json.Linq;
 using Npgsql;
 using Pgvector;
-using Samples.Bedrock.Model;
+using Samples.Bedrock.Rag.Model;
 using Samples.Common;
 using System.Text;
 
-namespace Samples.Bedrock.Samples
+namespace Samples.Bedrock.Rag.Samples
 {
     //Example class where you can get embeddings from a query, compare it with embeddings saved in a postgres table, build a context and get an answer for a question based on the context. 
-    internal class Sample_0700 : ISample
+    internal class Query : ISample
     {
         AWSCredentials _credentials;
 
-        internal Sample_0700(AWSCredentials aWSCredentials)
+        internal Query(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
         }
         public void Run()
         {
-            Console.WriteLine($"Running {this.GetType().Name} ###############");
+            Console.WriteLine($"Running {GetType().Name} ###############");
 
             //string query = "Who asked a question about dog's leg?";
             //string query = "Who quitely asked about dog's leg?";
@@ -33,7 +33,7 @@ namespace Samples.Bedrock.Samples
             var result = SearchDB(embeddingRelatedToQuery);
             ComposeAnswer(result, query);
 
-            Console.WriteLine($"End of {this.GetType().Name} ############");
+            Console.WriteLine($"End of {GetType().Name} ############");
         }
 
         private float[] GetQueryEmbeddings(string query)
@@ -63,7 +63,7 @@ namespace Samples.Bedrock.Samples
             Console.WriteLine("Searching database...");
             List<SearchResult> searchResultList = new List<SearchResult>();
 
-            string connectionString = Utility.GetDBConnectionString("KBStoreDB");
+            string connectionString = Utility.GetDBConnectionString("MyKBStoreDB");
 
             var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
             dataSourceBuilder.UseVector();
@@ -115,7 +115,7 @@ namespace Samples.Bedrock.Samples
 
 
             string body = "{\"prompt\":" + Newtonsoft.Json.JsonConvert.ToString(prompt) + ",\"max_tokens_to_sample\":5000,\"temperature\":0.5,\"top_k\":250,\"top_p\":0.999,\"stop_sequences\":[\"\\n\\nHuman:\"],\"anthropic_version\":\"bedrock-2023-05-31\"}";
- 
+
             request.Body = Utility.GetStreamFromString(body);
 
             var result = client.InvokeModelAsync(request).Result;
@@ -123,8 +123,8 @@ namespace Samples.Bedrock.Samples
             Console.Write(content);
 
 
- 
-            Console.WriteLine($"End of {this.GetType().Name} ############");
+
+            Console.WriteLine($"End of {GetType().Name} ############");
         }
     }
 
