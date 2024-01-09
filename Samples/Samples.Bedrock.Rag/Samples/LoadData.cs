@@ -75,8 +75,6 @@ namespace Samples.Bedrock.Rag.Samples
                         pbLevel1.WriteLine("Done");
 
                     }
-
-
                 }
                 Console.WriteLine($"End of {GetType().Name} ############");
             }

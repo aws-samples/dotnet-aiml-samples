@@ -23,15 +23,19 @@ namespace Samples.Bedrock.Rag.Samples
         {
             Console.WriteLine($"Running {GetType().Name} ###############");
 
-            //string query = "Who asked a question about dog's leg?";
-            //string query = "Who quitely asked about dog's leg?";
-            //string query = "Who did Hoxha replaced in his first appearance?";
-            string query = "What are some action games for playstation?";
+            bool keepQuerying = true;
+            do
+            {
+                Console.WriteLine("Type your question. E.g. Who wrote a national best selling cook book?. Press # and <enter> to exit.");
+                string query = Console.ReadLine();
+                keepQuerying = !query.Contains("#");
 
-            float[] embeddingRelatedToQuery = GetQueryEmbeddings(query);
-            StringBuilder b = new StringBuilder();
-            var result = SearchDB(embeddingRelatedToQuery);
-            ComposeAnswer(result, query);
+                float[] embeddingRelatedToQuery = GetQueryEmbeddings(query);
+                StringBuilder b = new StringBuilder();
+                var result = SearchDB(embeddingRelatedToQuery);
+                ComposeAnswer(result, query);
+
+            } while (keepQuerying);
 
             Console.WriteLine($"End of {GetType().Name} ############");
         }
@@ -106,7 +110,7 @@ namespace Samples.Bedrock.Rag.Samples
             request.Accept = "application/json";
 
             StringBuilder sb = new StringBuilder();
-            searchResult.ForEach(sr => sb.AppendLine(sr.ToString()));
+            searchResult.ForEach(sr => sb.AppendLine(sr.Paragraph));
             string context = $"<context>{sb.ToString()}</context>";
             string question = $"<question>{query}</question>";
             string promptGuide = "Please read the user’s question supplied within the <question> tags. Then, using only the contextual information provided above within the <context> tags, generate an answer to the question and output it within <answer> tags.";
@@ -121,10 +125,10 @@ namespace Samples.Bedrock.Rag.Samples
             var result = client.InvokeModelAsync(request).Result;
             string content = Utility.GetStringFromStream(result.Body);
             Console.Write(content);
+            Console.WriteLine("------------------------------------------------");
 
 
 
-            Console.WriteLine($"End of {GetType().Name} ############");
         }
     }
 
