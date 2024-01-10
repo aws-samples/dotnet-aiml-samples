@@ -30,10 +30,14 @@ namespace Samples.Bedrock.Rag.Samples
                 string query = Console.ReadLine();
                 keepQuerying = !query.Contains("#");
 
-                float[] embeddingRelatedToQuery = GetQueryEmbeddings(query);
-                StringBuilder b = new StringBuilder();
-                var result = SearchDB(embeddingRelatedToQuery);
-                ComposeAnswer(result, query);
+                if (keepQuerying)
+                {
+                    float[] embeddingRelatedToQuery = GetQueryEmbeddings(query);
+                    StringBuilder b = new StringBuilder();
+                    var result = SearchDB(embeddingRelatedToQuery);
+                    ComposeAnswer(result, query);
+                    Console.WriteLine("\r\n##########\r\n");
+                }
 
             } while (keepQuerying);
 
@@ -75,7 +79,7 @@ namespace Samples.Bedrock.Rag.Samples
             {
                 using (var connection = dataSource.OpenConnection())
                 {
-                    using (var cmd = new NpgsqlCommand("SELECT id,title,paragraph FROM kb_article ORDER BY embedding <-> $1 LIMIT 5", connection))
+                    using (var cmd = new NpgsqlCommand("SELECT id,title,paragraph,source FROM kb_article ORDER BY embedding <-> $1 LIMIT 5", connection))
                     {
                         var embedding = new Vector(queryEmbedding);
                         cmd.Parameters.AddWithValue(embedding);
@@ -90,6 +94,7 @@ namespace Samples.Bedrock.Rag.Samples
                                 searchResult.Id = reader.GetFieldValue<int>(0);
                                 searchResult.Title = reader.GetFieldValue<string>(1);
                                 searchResult.Paragraph = reader.GetFieldValue<string>(2);
+                                searchResult.Source = reader.GetFieldValue<string>(3);
                                 Console.WriteLine(searchResult);
                                 ranking++;
                                 searchResultList.Add(searchResult);
@@ -116,8 +121,6 @@ namespace Samples.Bedrock.Rag.Samples
             string promptGuide = "Please read the user’s question supplied within the <question> tags. Then, using only the contextual information provided above within the <context> tags, generate an answer to the question and output it within <answer> tags.";
             string prompt = $"Human: {context}\r\n{question}\r\n{promptGuide}\r\n Assistant:";
 
-
-
             string body = "{\"prompt\":" + Newtonsoft.Json.JsonConvert.ToString(prompt) + ",\"max_tokens_to_sample\":5000,\"temperature\":0.5,\"top_k\":250,\"top_p\":0.999,\"stop_sequences\":[\"\\n\\nHuman:\"],\"anthropic_version\":\"bedrock-2023-05-31\"}";
 
             request.Body = Utility.GetStreamFromString(body);
@@ -125,10 +128,6 @@ namespace Samples.Bedrock.Rag.Samples
             var result = client.InvokeModelAsync(request).Result;
             string content = Utility.GetStringFromStream(result.Body);
             Console.Write(content);
-            Console.WriteLine("------------------------------------------------");
-
-
-
         }
     }
 

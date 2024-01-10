@@ -12,7 +12,7 @@
 
         public override string ToString()
         {
-            return $"###################\r\nRanking:{Ranking} Id:{Id} Title:{Title} \r\n#######################";
+            return $"------------------\r\nRanking:{Ranking} Id:{Id} Title:{Title} Source:{Source} \r\n";
         }
     }
 }
