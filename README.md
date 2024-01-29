@@ -16,14 +16,14 @@ cd C:\Dev\dotnet-aiml-samples\samples
 start .
 ```
 
-2. Once the git repo is cloned, open the folder `C:\Dev\dotnet-aiml-samples\Samples`. Open the Visual Studio solution file `Samples.sln` using Visual Studio 2022. Let's explore the project structure. 
-**You have nothing to do here besides just reading through the code and understanding how it is organized. We will go into each sample later** 
+2. Once the git repo is cloned, open the folder `C:\Dev\dotnet-aiml-samples\Samples`. Open the Visual Studio solution file `Samples.sln` using Visual Studio 2022. 
 
 3. All samples are just console applications you can run independently. 
     - **Samples.Common**: A class library containing helpful utility functions. 
     - **Samples.Bedrock**: Amazon Bedrock samples 
     - **Samples.Bedrock.Rag**:  A sample Retrieval-Augmented Generation (RAG) solution. 
     - **Samples.Polly**: Code samples to generate voice from text. 
+
 4. In *Samples.Common->Utility.cs*
 
     ```csharp
@@ -45,6 +45,7 @@ start .
     ```
 
 This checks the existence of a profile called `my-dev-profile`; if it exists, it will use the credentials provided in the profile. Otherwise, it will use the credentials provided by the [EC2 instance profile](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html). 
+To learn how to create AWS access & secret keys and save them in a profile watch [this video](https://www.youtube.com/watch?v=fwtmTMf53Ek)
 
 4. In *Samples.Common->ISample*
    This interface is implemented by all the samples. You can run the sample by creating an instance and calling the ISample->Run command. 
@@ -75,7 +76,7 @@ This checks the existence of a profile called `my-dev-profile`; if it exists, it
  }
  ```
 
-Initiate an instance of the sample S1 **[line 5]** & run it **[line 9]**. When you are trying Sample 2, comment the `s1.Run()` in **[line 9]** and comment out `s2.Run()` in **[line 10]** & so on. Then, save the file, compile, and run the project.  
+This initiate an instance of the sample S1 & run it. When you want to try Sample 2, comment the `s1.Run()` and comment out `s2.Run()`. Then, save the file, compile, and run the project.  
 
 
 ## License
