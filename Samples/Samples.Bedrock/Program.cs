@@ -16,12 +16,12 @@ namespace Samples.Bedrock
             ISample s0500 = new Sample_0500(creds);
             ISample s0600 = new Sample_0600(creds);
 
-            //s0100.Run();
+            s0100.Run();
             //s0200.Run();
             //s0300.Run();
             //s0400.Run();
             //s0500.Run();
-            s0600.Run();
+            //s0600.Run();
 
         }
     }
