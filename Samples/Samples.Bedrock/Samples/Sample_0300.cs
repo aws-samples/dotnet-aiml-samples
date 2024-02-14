@@ -17,7 +17,7 @@ namespace Samples.Bedrock.Samples
         {
             Console.WriteLine($"Running {this.GetType().Name} ###############");
             Directory.CreateDirectory(@"C:\temp");
-            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
             InvokeModelRequest request = new InvokeModelRequest();
             request.ModelId = "stability.stable-diffusion-xl-v1";
             request.ContentType = "application/json";

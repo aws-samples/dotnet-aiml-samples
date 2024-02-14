@@ -46,7 +46,7 @@ namespace Samples.Bedrock.Rag.Samples
 
         private float[] GetQueryEmbeddings(string query)
         {
-            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
             InvokeModelRequest request = new InvokeModelRequest();
             request.ModelId = "amazon.titan-embed-text-v1";
             request.ContentType = "application/json";
@@ -108,7 +108,7 @@ namespace Samples.Bedrock.Rag.Samples
 
         private void ComposeAnswer(List<SearchResult> searchResult, string query)
         {
-            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
             InvokeModelRequest request = new InvokeModelRequest();
             request.ModelId = "anthropic.claude-v2";
             request.ContentType = "application/json";

@@ -39,7 +39,7 @@ namespace Samples.Bedrock.Samples
         private List<ParagraphEmbeddingInfo> GetEmbeddings(List<string> paragraphList)
         {
             List<ParagraphEmbeddingInfo> embeddingList = new List<ParagraphEmbeddingInfo>();
-            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
 
             foreach (var pInfo in paragraphList.Select((content, index) => (content, index)))
             {

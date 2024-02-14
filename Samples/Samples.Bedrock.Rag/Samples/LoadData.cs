@@ -96,7 +96,7 @@ namespace Samples.Bedrock.Rag.Samples
                 {
                     if (!string.IsNullOrEmpty(paragraph))
                     {
-                        AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
+                        AmazonBedrockRuntimeClient client = new AmazonBedrockRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
                         InvokeModelRequest request = new InvokeModelRequest();
                         request.ModelId = "amazon.titan-embed-text-v1";
                         request.ContentType = "application/json";
