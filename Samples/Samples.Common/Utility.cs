@@ -77,5 +77,22 @@ namespace Samples.Common
             byte[] file=File.ReadAllBytes(fileName);
             return Convert.ToBase64String(file);
         }
+
+        public static bool WriteKeyValuePair(string key, string value)
+        {
+            var f = File.Create(key);
+            f.Write(Encoding.UTF8.GetBytes(value));
+            f.Close();
+
+            return true;
+        }
+
+        public static string? ReadKeyValuePair(string key)
+        {
+            if (File.Exists(key))
+                return File.ReadAllText(key);
+            else
+                return null;
+        }
     }
 }
