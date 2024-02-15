@@ -47,6 +47,11 @@ namespace Samples.Bedrock.S3.Samples
 
             var response = agentRuntimeClient.RetrieveAndGenerateAsync(retrieveAndGenerateRequest).Result;
 
+            Console.WriteLine($"Query Text - {retrieveAndGenerateInput.Text}");
+            Console.WriteLine("******************************************************************************************************************");
+            Console.WriteLine("Query Output");
+            Console.WriteLine("*************");
+
             Console.WriteLine(response.Output.Text);
 
 

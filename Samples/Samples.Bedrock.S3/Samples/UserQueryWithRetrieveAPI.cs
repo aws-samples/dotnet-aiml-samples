@@ -23,7 +23,7 @@ namespace Samples.Bedrock.S3.Samples
 
             KnowledgeBaseVectorSearchConfiguration knowledgeBaseVectorSearchConfiguration = new KnowledgeBaseVectorSearchConfiguration
             {
-                NumberOfResults = 10
+                NumberOfResults = 3
             };
 
             KnowledgeBaseRetrievalConfiguration knowledgeBaseRetrievalConfiguration = new KnowledgeBaseRetrievalConfiguration
@@ -45,9 +45,17 @@ namespace Samples.Bedrock.S3.Samples
 
             var result = agentRuntimeClient.RetrieveAsync(retrieveRequest).Result;
 
+            Console.WriteLine($"Query Text - {knowledgeBaseQuery.Text}");
+            Console.WriteLine("******************************************************************************************************************");
+            Console.WriteLine("Query Output");
+            Console.WriteLine("*************");
+            int i = 1;
             foreach (var res in result.RetrievalResults)
             {
+                Console.Write($"Chunk {i} of Query Output ====> ");
                 Console.WriteLine(res.Content.Text);
+                Console.WriteLine("");
+                i++;
             }
 
             Console.WriteLine($"End of {GetType().Name} ############");

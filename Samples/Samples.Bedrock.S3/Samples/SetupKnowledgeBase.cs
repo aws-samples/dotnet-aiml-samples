@@ -11,6 +11,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Samples.Common;
 using ShellProgressBar;
+using ConflictException = Amazon.Bedrock.Model.ConflictException;
 
 //using Newtonsoft.Json.Linq;
 //using ShellProgressBar;
@@ -91,7 +92,22 @@ namespace Samples.Bedrock.S3.Samples
                 RoleArn = roleArn
             };
 
-            var knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
+            CreateKnowledgeBaseResponse knowledgeBase = new CreateKnowledgeBaseResponse();
+
+            try
+            {
+                knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException.Message.Contains("already exists"))
+                {
+                    Console.WriteLine($"KnowledgeBase with name {createKnowledgeBaseRequest.Name} already exists");
+                    Console.WriteLine("Please press enter to exit.");
+                    Console.ReadLine();
+                    Environment.Exit(0);
+                }
+            }
 
             CreateDataSourceRequest createDataSourceRequest = new CreateDataSourceRequest
             {
@@ -126,18 +142,27 @@ namespace Samples.Bedrock.S3.Samples
             var jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
             using (var pbLevel1 = new ProgressBar(100, "Knowledge Data sync in progress", _progressBarOption))
             {
+                var tickCounter = 0;
                 while(jobStatus.IngestionJob.Status != IngestionJobStatus.COMPLETE)
                 {
                     Thread.Sleep(3000);
                     pbLevel1.Tick();
+                    tickCounter++;
                     jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
                 }
-                
+
+                while (tickCounter <= 100)
+                {
+                    pbLevel1.Tick();
+                    tickCounter++;
+                }
+
                 pbLevel1.WriteLine("Done");
             }
 
             Utility.WriteKeyValuePair("KnowledgeBaseId", knowledgeBase.KnowledgeBase.KnowledgeBaseId);
 
+            Console.WriteLine("KnowledgeBase setup is successfull!");
             Console.WriteLine($"End of {GetType().Name} ############");
         }
 
@@ -146,7 +171,7 @@ namespace Samples.Bedrock.S3.Samples
             IAmazonS3 s3Client = new AmazonS3Client();
             var response = s3Client.ListBucketsAsync().Result;
             List<S3Bucket> s3Buckets = response.Buckets;
-            var bucket = s3Buckets.Find(x => x.BucketName.StartsWith("dotnet-bedrock-knowledgebase-"));
+            var bucket = s3Buckets.Find(x => x.BucketName.StartsWith("bedrock-kb-")); //dotnet-bedrock-knowledgebase-
             s3Arn = "arn:aws:s3:::" + bucket.BucketName;
 
             IAmazonOpenSearchServerless opensearchClient = new AmazonOpenSearchServerlessClient();
@@ -157,7 +182,7 @@ namespace Samples.Bedrock.S3.Samples
             };
             
             var collections = opensearchClient.ListCollectionsAsync(collectionReq).Result;
-            var collection = collections.CollectionSummaries.Find(x => x.Name.StartsWith("dotnet-bedrock-knowledge-base-"));
+            var collection = collections.CollectionSummaries.Find(x => x.Name.StartsWith("bedrock-knowledge-base-")); //dotnet-bedrock-knowledge-base-
             collectionArn = collection.Arn;
 
             var client = new AmazonIdentityManagementServiceClient();
