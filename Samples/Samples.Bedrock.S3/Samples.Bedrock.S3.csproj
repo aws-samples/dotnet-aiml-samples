@@ -11,7 +11,6 @@
     <PackageReference Include="AWSSDK.Bedrock" Version="3.7.301.37" />
     <PackageReference Include="AWSSDK.BedrockAgent" Version="3.7.302.23" />
     <PackageReference Include="AWSSDK.BedrockAgentRuntime" Version="3.7.300.37" />
-    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.301.37" />
     <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.300.50" />
     <PackageReference Include="AWSSDK.OpenSearchServerless" Version="3.7.301.39" />
     <PackageReference Include="AWSSDK.S3" Version="3.7.305.26" />
