@@ -1,8 +1,8 @@
 ﻿using Amazon.Runtime;
-using Samples.Bedrock.S3.Samples;
+using Samples.Bedrock.KB.Samples;
 using Samples.Common;
 
-namespace Samples.Bedrock.S3
+namespace Samples.Bedrock.KB
 {
     internal class Program
     {

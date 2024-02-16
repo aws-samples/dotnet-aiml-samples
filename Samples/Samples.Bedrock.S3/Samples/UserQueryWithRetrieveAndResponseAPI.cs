@@ -5,7 +5,7 @@ using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Runtime;
 using Samples.Common;
 
-namespace Samples.Bedrock.S3.Samples
+namespace Samples.Bedrock.KB.Samples
 {
     // example class where you can query the knowledge base with augmented FM Model response
     internal class UserQueryWithRetrieveAndResponseAPI : ISample

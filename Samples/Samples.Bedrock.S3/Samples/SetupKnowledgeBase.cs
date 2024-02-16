@@ -11,7 +11,7 @@ using Amazon.S3.Model;
 using Samples.Common;
 using ShellProgressBar;
 
-namespace Samples.Bedrock.S3.Samples
+namespace Samples.Bedrock.KB.Samples
 {
     // example class where you can setup vector database with Amazon OpenSearch Serverless to store embeddings of Knowledge Database
     internal class SetupKnowledgeBase : ISample
@@ -64,7 +64,7 @@ namespace Samples.Bedrock.S3.Samples
             // Persist KnowledgeBaseId required for performing user queries
             Utility.WriteKeyValuePair("KnowledgeBaseId", knowledgeBase.KnowledgeBase.KnowledgeBaseId);
 
-            Console.WriteLine("Congratulations! KnowledgeBase setup is successfull.");
+            Console.WriteLine($"Congratulations! KnowledgeBase '{knowledgeBase.KnowledgeBase.Name}' setup is successfull.");
             Console.WriteLine($"End of {GetType().Name} ############");
         }
 
