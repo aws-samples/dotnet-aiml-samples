@@ -2,7 +2,6 @@
 using Amazon.Bedrock.Model;
 using Amazon.BedrockAgent;
 using Amazon.BedrockAgent.Model;
-using Amazon.BedrockAgentRuntime;
 using Amazon.IdentityManagement;
 using Amazon.OpenSearchServerless;
 using Amazon.OpenSearchServerless.Model;
@@ -11,10 +10,6 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Samples.Common;
 using ShellProgressBar;
-using ConflictException = Amazon.Bedrock.Model.ConflictException;
-
-//using Newtonsoft.Json.Linq;
-//using ShellProgressBar;
 
 namespace Samples.Bedrock.S3.Samples
 {
@@ -38,29 +33,107 @@ namespace Samples.Bedrock.S3.Samples
         }
         public void Run()
         {
-            //TODO: Please replace below, the aws account id and role name suffix with appropriate values before execution.
-            //var roleArn = "arn:aws:iam::<aws-account-Id>:role/service-role/AmazonBedrockExecutionRoleForKnowledgeBase_<role-name-suffix>";
-            
             Console.WriteLine($"Running {GetType().Name} ###############");
 
             GetAWSResourceValues(out string s3Arn, out string collectionArn, out string roleArn);
 
-            // Setup clients
-            AmazonBedrockClient client = new AmazonBedrockClient(_credentials, Amazon.RegionEndpoint.USEast1);
+            GetFoundationModelResponse embeddingModel = GetEmbeddingModel(_credentials, "amazon.titan-embed-text-v1");
+            CreateKnowledgeBaseRequest createKnowledgeBaseRequest = CreateKnowledgeBaseConfigurationBuilder(collectionArn, roleArn, embeddingModel.ModelDetails.ModelArn);
+            CreateKnowledgeBaseResponse knowledgeBase = new CreateKnowledgeBaseResponse();
             AmazonBedrockAgentClient agentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USEast1);
-            AmazonBedrockAgentRuntimeClient agentRuntimeClient = new AmazonBedrockAgentRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
 
-            // Get Embeding Model
-            GetFoundationModelRequest getFoundationModelRequest = new GetFoundationModelRequest();
-            getFoundationModelRequest.ModelIdentifier = "amazon.titan-embed-text-v1";
-            var embeddingModel = client.GetFoundationModelAsync(getFoundationModelRequest).Result;
+            try
+            {
+                knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException.Message.Contains("already exists"))
+                {
+                    Console.WriteLine($"KnowledgeBase with name {createKnowledgeBaseRequest.Name} already exists");
+                    Console.WriteLine("Press enter to abort.");
+                    Console.ReadLine();
+                    Environment.Exit(0);
+                }
+            }
 
+            CreateDataSourceResponse dataSource = AddDataSourceToKnowledgeBase(agentClient, s3Arn, knowledgeBase.KnowledgeBase.KnowledgeBaseId);
+
+            DataSyncWithKnowledgeBase(agentClient, knowledgeBase.KnowledgeBase.KnowledgeBaseId, dataSource.DataSource.DataSourceId);
+
+            // Persist KnowledgeBaseId required for performing user queries
+            Utility.WriteKeyValuePair("KnowledgeBaseId", knowledgeBase.KnowledgeBase.KnowledgeBaseId);
+
+            Console.WriteLine("Congratulations! KnowledgeBase setup is successfull.");
+            Console.WriteLine($"End of {GetType().Name} ############");
+        }
+
+        private void DataSyncWithKnowledgeBase(AmazonBedrockAgentClient agentClient, string knowledgeBaseId, string dataSourceId)
+        {
+            StartIngestionJobRequest startIngestionJobRequest = new StartIngestionJobRequest
+            {
+                DataSourceId = dataSourceId,
+                KnowledgeBaseId = knowledgeBaseId,
+                Description = "poll job status"
+            };
+
+            var startIngestJob = agentClient.StartIngestionJobAsync(startIngestionJobRequest).Result;
+
+            GetIngestionJobRequest getIngestionJobRequest = new GetIngestionJobRequest
+            {
+                IngestionJobId = startIngestJob.IngestionJob.IngestionJobId,
+                DataSourceId = dataSourceId,
+                KnowledgeBaseId = knowledgeBaseId
+            };
+
+            var jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
+            using (var pbLevel1 = new ProgressBar(100, "Knowledge Data sync in progress", _progressBarOption))
+            {
+                var tickCounter = 0;
+                while (jobStatus.IngestionJob.Status != IngestionJobStatus.COMPLETE)
+                {
+                    Thread.Sleep(3000);
+                    pbLevel1.Tick();
+                    tickCounter++;
+                    jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
+                }
+
+                while (tickCounter <= 100)
+                {
+                    pbLevel1.Tick();
+                    tickCounter++;
+                }
+
+                pbLevel1.WriteLine("Done");
+            }
+        }
+
+        private static CreateDataSourceResponse AddDataSourceToKnowledgeBase(AmazonBedrockAgentClient agentClient, string s3Arn, string knowledgeBaseId)
+        {
+            CreateDataSourceRequest createDataSourceRequest = new CreateDataSourceRequest
+            {
+                DataSourceConfiguration = new DataSourceConfiguration
+                {
+                    S3Configuration = new S3DataSourceConfiguration { BucketArn = s3Arn },
+                    Type = DataSourceType.S3
+                },
+                Name = "knowledge-base-data-source-1202202401",
+                Description = "knowledge-base-data-source-1202202401",
+                KnowledgeBaseId = knowledgeBaseId
+            };
+
+            var dataSource = agentClient.CreateDataSourceAsync(createDataSourceRequest).Result;
+            return dataSource;
+        }
+
+        private static CreateKnowledgeBaseRequest CreateKnowledgeBaseConfigurationBuilder(string collectionArn, string roleArn, string embeddingModelArn)
+        {
             // Build configuration to setup Knowledge Base
             KnowledgeBaseConfiguration knowledgeBaseConfiguration = new KnowledgeBaseConfiguration
             {
                 VectorKnowledgeBaseConfiguration = new VectorKnowledgeBaseConfiguration
                 {
-                    EmbeddingModelArn = embeddingModel.ModelDetails.ModelArn
+                    EmbeddingModelArn = embeddingModelArn
                 },
                 Type = KnowledgeBaseType.VECTOR
             };
@@ -91,79 +164,18 @@ namespace Samples.Bedrock.S3.Samples
                 KnowledgeBaseConfiguration = knowledgeBaseConfiguration,
                 RoleArn = roleArn
             };
+            return createKnowledgeBaseRequest;
+        }
 
-            CreateKnowledgeBaseResponse knowledgeBase = new CreateKnowledgeBaseResponse();
-
-            try
+        private static GetFoundationModelResponse GetEmbeddingModel(AWSCredentials creds, string modelIdentifier)
+        {
+            AmazonBedrockClient client = new AmazonBedrockClient(creds, Amazon.RegionEndpoint.USEast1);
+            GetFoundationModelRequest getFoundationModelRequest = new GetFoundationModelRequest
             {
-                knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
-            }
-            catch (Exception ex)
-            {
-                if (ex.InnerException.Message.Contains("already exists"))
-                {
-                    Console.WriteLine($"KnowledgeBase with name {createKnowledgeBaseRequest.Name} already exists");
-                    Console.WriteLine("Please press enter to exit.");
-                    Console.ReadLine();
-                    Environment.Exit(0);
-                }
-            }
-
-            CreateDataSourceRequest createDataSourceRequest = new CreateDataSourceRequest
-            {
-                DataSourceConfiguration = new DataSourceConfiguration
-                {
-                    S3Configuration = new S3DataSourceConfiguration { BucketArn = s3Arn },
-                    Type = DataSourceType.S3
-                },
-                Name = "knowledge-base-data-source-1202202401",
-                Description = "knowledge-base-data-source-1202202401",
-                KnowledgeBaseId = knowledgeBase.KnowledgeBase.KnowledgeBaseId
+                ModelIdentifier = modelIdentifier
             };
-
-            var dataSource = agentClient.CreateDataSourceAsync(createDataSourceRequest).Result;
-
-            StartIngestionJobRequest startIngestionJobRequest = new StartIngestionJobRequest
-            {
-                DataSourceId = dataSource.DataSource.DataSourceId,
-                KnowledgeBaseId = knowledgeBase.KnowledgeBase.KnowledgeBaseId,
-                Description = "check job status"
-            };
-
-            var startIngestJob = agentClient.StartIngestionJobAsync(startIngestionJobRequest).Result;
-
-            GetIngestionJobRequest getIngestionJobRequest = new GetIngestionJobRequest
-            {
-                IngestionJobId = startIngestJob.IngestionJob.IngestionJobId,
-                DataSourceId = dataSource.DataSource.DataSourceId,
-                KnowledgeBaseId = knowledgeBase.KnowledgeBase.KnowledgeBaseId
-            };
-
-            var jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
-            using (var pbLevel1 = new ProgressBar(100, "Knowledge Data sync in progress", _progressBarOption))
-            {
-                var tickCounter = 0;
-                while(jobStatus.IngestionJob.Status != IngestionJobStatus.COMPLETE)
-                {
-                    Thread.Sleep(3000);
-                    pbLevel1.Tick();
-                    tickCounter++;
-                    jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
-                }
-
-                while (tickCounter <= 100)
-                {
-                    pbLevel1.Tick();
-                    tickCounter++;
-                }
-
-                pbLevel1.WriteLine("Done");
-            }
-
-            Utility.WriteKeyValuePair("KnowledgeBaseId", knowledgeBase.KnowledgeBase.KnowledgeBaseId);
-
-            Console.WriteLine("KnowledgeBase setup is successfull!");
-            Console.WriteLine($"End of {GetType().Name} ############");
+            var embeddingModel = client.GetFoundationModelAsync(getFoundationModelRequest).Result;
+            return embeddingModel;
         }
 
         private void GetAWSResourceValues(out string s3Arn, out string collectionArn, out string roleArn)

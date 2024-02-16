@@ -5,7 +5,7 @@ using Samples.Common;
 
 namespace Samples.Bedrock.S3.Samples
 {
-    // example class where you can setup vector database with Amazon OpenSearch Serverless to store embeddings of Knowledge Database
+    // example class where you can query the knowledge base
     internal class UserQueryWithRetrieveAPI : ISample
     {
         AWSCredentials _credentials;
@@ -21,44 +21,45 @@ namespace Samples.Bedrock.S3.Samples
             AmazonBedrockAgentRuntimeClient agentRuntimeClient = new AmazonBedrockAgentRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
             var knowledgeBaseId = Utility.ReadKeyValuePair("KnowledgeBaseId");
 
-            KnowledgeBaseVectorSearchConfiguration knowledgeBaseVectorSearchConfiguration = new KnowledgeBaseVectorSearchConfiguration
+            bool keepQuerying = true;
+            do
             {
-                NumberOfResults = 3
-            };
+                Console.WriteLine("Type your question. E.g. Give me a summary of financial market developments and open market operations in January 2023?. Press # and <enter> to exit.");
+                string query = Console.ReadLine();
+                keepQuerying = !query.Contains("#");
 
-            KnowledgeBaseRetrievalConfiguration knowledgeBaseRetrievalConfiguration = new KnowledgeBaseRetrievalConfiguration
-            {
-                VectorSearchConfiguration = knowledgeBaseVectorSearchConfiguration
-            };
+                if (keepQuerying)
+                {
+                    RetrieveRequest retrieveRequest = BuildRetrieveRequest(knowledgeBaseId, query);
+                    var result = agentRuntimeClient.RetrieveAsync(retrieveRequest).Result;
 
-            KnowledgeBaseQuery knowledgeBaseQuery = new KnowledgeBaseQuery
-            {
-                Text = "Give me a summary of financial market developments and open market operations in January 2023"
-            };
+                    Console.WriteLine($"Query Text - {query}\r\n{ new String('*',100) }\r\nQuery Output\r\n{new String('*', 13) }");
+                    int i = 1;
+                    foreach (var res in result.RetrievalResults)
+                    {
+                        Console.Write($"Chunk {i} of Query Output with Score {res.Score} ====> {res.Content.Text} \r\n\r\n");
+                        i++;
+                    }
 
-            RetrieveRequest retrieveRequest = new RetrieveRequest
-            {
-                RetrievalConfiguration = knowledgeBaseRetrievalConfiguration,
-                KnowledgeBaseId = knowledgeBaseId,
-                RetrievalQuery = knowledgeBaseQuery
-            };
+                    Console.WriteLine("\r\n##########\r\n");
+                }
 
-            var result = agentRuntimeClient.RetrieveAsync(retrieveRequest).Result;
-
-            Console.WriteLine($"Query Text - {knowledgeBaseQuery.Text}");
-            Console.WriteLine("******************************************************************************************************************");
-            Console.WriteLine("Query Output");
-            Console.WriteLine("*************");
-            int i = 1;
-            foreach (var res in result.RetrievalResults)
-            {
-                Console.Write($"Chunk {i} of Query Output ====> ");
-                Console.WriteLine(res.Content.Text);
-                Console.WriteLine("");
-                i++;
-            }
+            } while (keepQuerying);
 
             Console.WriteLine($"End of {GetType().Name} ############");
+        }
+
+        private static RetrieveRequest BuildRetrieveRequest(string? knowledgeBaseId, string query)
+        {
+            return new RetrieveRequest
+            {
+                RetrievalConfiguration = new KnowledgeBaseRetrievalConfiguration
+                {
+                    VectorSearchConfiguration = new KnowledgeBaseVectorSearchConfiguration { NumberOfResults = 3 }
+                },
+                KnowledgeBaseId = knowledgeBaseId,
+                RetrievalQuery = new KnowledgeBaseQuery { Text = query }
+            };
         }
     }
 }
