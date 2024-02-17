@@ -89,22 +89,14 @@ namespace Samples.Bedrock.KB.Samples
             var jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
             using (var pbLevel1 = new ProgressBar(100, "Knowledge Data sync in progress", _progressBarOption))
             {
-                var tickCounter = 0;
                 while (jobStatus.IngestionJob.Status != IngestionJobStatus.COMPLETE)
                 {
-                    Thread.Sleep(3000);
+                    Thread.Sleep(1000);
                     pbLevel1.Tick();
-                    tickCounter++;
                     jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
                 }
 
-                while (tickCounter <= 100)
-                {
-                    pbLevel1.Tick();
-                    tickCounter++;
-                }
-
-                pbLevel1.WriteLine("Done");
+                pbLevel1.Tick(100, "Done");
             }
         }
 
