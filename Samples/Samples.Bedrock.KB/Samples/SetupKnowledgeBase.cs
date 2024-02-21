@@ -45,6 +45,7 @@ namespace Samples.Bedrock.KB.Samples
             try
             {
                 knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
+                Console.WriteLine($"Knowledge base '{knowledgeBase.KnowledgeBase.Name}' created successfully! The Knowledge base Id is {knowledgeBase.KnowledgeBase.KnowledgeBaseId}");
             }
             catch (Exception ex)
             {
@@ -115,6 +116,7 @@ namespace Samples.Bedrock.KB.Samples
             };
 
             var dataSource = agentClient.CreateDataSourceAsync(createDataSourceRequest).Result;
+            Console.WriteLine($"Data source {dataSource.DataSource.Name} linked successfully with Knowledge base Id '{knowledgeBaseId}'");
             return dataSource;
         }
 
