@@ -40,7 +40,7 @@ namespace Samples.Bedrock.KB.Samples
             GetFoundationModelResponse embeddingModel = GetEmbeddingModel(_credentials, "amazon.titan-embed-text-v1");
             CreateKnowledgeBaseRequest createKnowledgeBaseRequest = CreateKnowledgeBaseConfigurationBuilder(collectionArn, roleArn, embeddingModel.ModelDetails.ModelArn);
             CreateKnowledgeBaseResponse knowledgeBase = new CreateKnowledgeBaseResponse();
-            AmazonBedrockAgentClient agentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockAgentClient agentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USWest2);
 
             try
             {
@@ -174,7 +174,7 @@ namespace Samples.Bedrock.KB.Samples
 
         private void GetAWSResourceValues(out string s3Arn, out string collectionArn, out string roleArn)
         {
-            IAmazonS3 s3Client = new AmazonS3Client();
+            IAmazonS3 s3Client = new AmazonS3Client(_credentials,Amazon.RegionEndpoint.USWest2);
             var response = s3Client.ListBucketsAsync().Result;
             List<S3Bucket> s3Buckets = response.Buckets;
             var bucket = s3Buckets.Find(x => x.BucketName.StartsWith("bedrock-kb-")); //dotnet-bedrock-knowledgebase-
