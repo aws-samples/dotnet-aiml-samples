@@ -37,7 +37,7 @@ namespace Samples.Bedrock.KB.Samples
 
             GetAWSResourceValues(out string s3Arn, out string collectionArn, out string roleArn);
 
-            GetFoundationModelResponse embeddingModel = GetEmbeddingModel(_credentials, "amazon.titan-embed-text-v1");
+            GetFoundationModelResponse embeddingModel = GetEmbeddingModel( "amazon.titan-embed-text-v1");
             CreateKnowledgeBaseRequest createKnowledgeBaseRequest = CreateKnowledgeBaseConfigurationBuilder(collectionArn, roleArn, embeddingModel.ModelDetails.ModelArn);
             CreateKnowledgeBaseResponse knowledgeBase = new CreateKnowledgeBaseResponse();
             AmazonBedrockAgentClient agentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USWest2);
@@ -161,9 +161,9 @@ namespace Samples.Bedrock.KB.Samples
             return createKnowledgeBaseRequest;
         }
 
-        private static GetFoundationModelResponse GetEmbeddingModel(AWSCredentials creds, string modelIdentifier)
+        private GetFoundationModelResponse GetEmbeddingModel(string modelIdentifier)
         {
-            AmazonBedrockClient client = new AmazonBedrockClient(creds, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockClient client = new AmazonBedrockClient(_credentials, Amazon.RegionEndpoint.USWest2);
             GetFoundationModelRequest getFoundationModelRequest = new GetFoundationModelRequest
             {
                 ModelIdentifier = modelIdentifier
@@ -180,7 +180,7 @@ namespace Samples.Bedrock.KB.Samples
             var bucket = s3Buckets.Find(x => x.BucketName.StartsWith("bedrock-kb-")); //dotnet-bedrock-knowledgebase-
             s3Arn = "arn:aws:s3:::" + bucket.BucketName;
 
-            IAmazonOpenSearchServerless opensearchClient = new AmazonOpenSearchServerlessClient();
+            IAmazonOpenSearchServerless opensearchClient = new AmazonOpenSearchServerlessClient(_credentials,Amazon.RegionEndpoint.USWest2);
             var collectionReq = new ListCollectionsRequest
             {
                 CollectionFilters = new CollectionFilters{ Status = CollectionStatus.ACTIVE },
