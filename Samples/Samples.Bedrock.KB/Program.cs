@@ -14,8 +14,8 @@ namespace Samples.Bedrock.KB
             ISample UserQueryWithRetrieveAPI = new UserQueryWithRetrieveAPI(creds);
             ISample UserQueryWithRetrieveAndResponseAPI = new UserQueryWithRetrieveAndResponseAPI(creds);
 
-            SetupKnowledgeBase.Run();
-            //UserQueryWithRetrieveAPI.Run();
+            //SetupKnowledgeBase.Run();
+            UserQueryWithRetrieveAPI.Run();
             //UserQueryWithRetrieveAndResponseAPI.Run();
 
             Console.ReadLine();

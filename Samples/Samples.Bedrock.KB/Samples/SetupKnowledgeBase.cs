@@ -16,8 +16,6 @@ namespace Samples.Bedrock.KB.Samples
     // example class where you can setup vector database with Amazon OpenSearch Serverless to store embeddings of Knowledge Database
     internal class SetupKnowledgeBase : ISample
     {
-        private const string _KB_NAME = "my-knowledge-base";
-        private const string _KB_DATA_SOURCE_NAME = "my-knowledge-base-data-source";
 
         ProgressBarOptions _progressBarOption = new ProgressBarOptions()
         {
@@ -46,10 +44,10 @@ namespace Samples.Bedrock.KB.Samples
             var kbList= _bedrockAgentClient.ListKnowledgeBasesAsync(new ListKnowledgeBasesRequest() { }).Result;
 
             string? kbId = null;
-            if (kbList.KnowledgeBaseSummaries.Exists(kb => kb.Name.Equals(_KB_NAME)))
+            if (kbList.KnowledgeBaseSummaries.Exists(kb => kb.Name.Equals(Common.KB_NAME)))
             {
-                Console.WriteLine($"Knowledge base with the name {_KB_NAME} already exists. We will use it for the subsequent steps.");
-                kbId = kbList.KnowledgeBaseSummaries?.Where(kb => kb.Name.Equals(_KB_NAME))?.FirstOrDefault()?.KnowledgeBaseId;
+                Console.WriteLine($"Knowledge base with the name {Common.KB_NAME} already exists. We will use it for the subsequent steps.");
+                kbId = kbList.KnowledgeBaseSummaries?.Where(kb => kb.Name.Equals(Common.KB_NAME))?.FirstOrDefault()?.KnowledgeBaseId;
             }
             else
             {
@@ -64,10 +62,8 @@ namespace Samples.Bedrock.KB.Samples
 
             SyncDataWithKnowledgeBase( kbId, dataSourceId);
 
-            // Persist KnowledgeBaseId required for performing user queries
-            Utility.WriteKeyValuePair("KnowledgeBaseId", kbId);
+            Console.WriteLine($"Congratulations! KnowledgeBase '{Common.KB_NAME}' setup is successfull.");
 
-            //Console.WriteLine($"Congratulations! KnowledgeBase '{knowledgeBase.KnowledgeBase.Name}' setup is successfull.");
             Console.WriteLine($"End of {GetType().Name} ############");
         }
 
@@ -106,8 +102,8 @@ namespace Samples.Bedrock.KB.Samples
         private string LinkDataSourceToKnowledgeBase(string s3Arn, string knowledgeBaseId)
         {
             var dataSources=_bedrockAgentClient.ListDataSourcesAsync(new ListDataSourcesRequest() { KnowledgeBaseId = knowledgeBaseId }).Result;
-            if (dataSources.DataSourceSummaries.Exists(ds => ds.Name == _KB_DATA_SOURCE_NAME)) {
-                Console.WriteLine($"Data source with the name {_KB_DATA_SOURCE_NAME} already exists. We will use the existing one");
+            if (dataSources.DataSourceSummaries.Exists(ds => ds.Name == Common.KB_DATA_SOURCE_NAME)) {
+                Console.WriteLine($"Data source with the name {Common.KB_DATA_SOURCE_NAME} already exists. We will use the existing one");
                 //there can be only one data source per knowledge base.
                 return dataSources.DataSourceSummaries.FirstOrDefault().DataSourceId;
             }
@@ -120,8 +116,8 @@ namespace Samples.Bedrock.KB.Samples
                         S3Configuration = new S3DataSourceConfiguration { BucketArn = s3Arn },
                         Type = DataSourceType.S3
                     },
-                    Name = _KB_DATA_SOURCE_NAME,
-                    Description = _KB_DATA_SOURCE_NAME,
+                    Name = Common.KB_DATA_SOURCE_NAME,
+                    Description = Common.KB_DATA_SOURCE_NAME,
                     KnowledgeBaseId = knowledgeBaseId
                 };
                 var dataSource = _bedrockAgentClient.CreateDataSourceAsync(createDataSourceRequest).Result;
@@ -165,8 +161,8 @@ namespace Samples.Bedrock.KB.Samples
 
             CreateKnowledgeBaseRequest createKnowledgeBaseRequest = new CreateKnowledgeBaseRequest
             {
-                Name = _KB_NAME,
-                Description = _KB_NAME,
+                Name = Common.KB_NAME,
+                Description = Common.KB_NAME,
                 StorageConfiguration = storageConfiguration,
                 KnowledgeBaseConfiguration = knowledgeBaseConfiguration,
                 RoleArn = roleArn

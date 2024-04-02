@@ -1,4 +1,6 @@
-﻿using Amazon.BedrockAgentRuntime;
+﻿using Amazon.BedrockAgent.Model;
+using Amazon.BedrockAgent;
+using Amazon.BedrockAgentRuntime;
 using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Runtime;
 using Samples.Common;
@@ -18,8 +20,8 @@ namespace Samples.Bedrock.KB.Samples
         {
             Console.WriteLine($"Running {GetType().Name} ###############");
 
-            AmazonBedrockAgentRuntimeClient agentRuntimeClient = new AmazonBedrockAgentRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
-            var knowledgeBaseId = Utility.ReadKeyValuePair("KnowledgeBaseId");
+            AmazonBedrockAgentRuntimeClient agentRuntimeClient = new AmazonBedrockAgentRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
+            var knowledgeBaseId = GetKBId();
 
             bool keepQuerying = true;
             do
@@ -60,6 +62,21 @@ namespace Samples.Bedrock.KB.Samples
                 KnowledgeBaseId = knowledgeBaseId,
                 RetrievalQuery = new KnowledgeBaseQuery { Text = query }
             };
+        }
+
+        private string GetKBId()
+        {
+            var bedrockAgentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USWest2);
+            var kbList = bedrockAgentClient.ListKnowledgeBasesAsync(new ListKnowledgeBasesRequest() { }).Result;
+            if (kbList.KnowledgeBaseSummaries.Exists(kb => kb.Name.Equals(Common.KB_NAME)))
+            {
+                Console.WriteLine($"Knowledge base with the name {Common.KB_NAME} already exists. We will use it for the subsequent steps.");
+                return kbList.KnowledgeBaseSummaries?.Where(kb => kb.Name.Equals(Common.KB_NAME))?.FirstOrDefault()?.KnowledgeBaseId;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Knowledge base with the name {Common.KB_NAME} does not exist. Please follow the previous lab steps to create the knowledge base with the name {Common.KB_NAME} & sync it with the data sources");
+            }
         }
     }
 }
