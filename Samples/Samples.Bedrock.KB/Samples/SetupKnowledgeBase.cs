@@ -40,7 +40,6 @@ namespace Samples.Bedrock.KB.Samples
 
             var existingAWSResources=GetExistingAWSResourcesValues();
          
-
             var kbList= _bedrockAgentClient.ListKnowledgeBasesAsync(new ListKnowledgeBasesRequest() { }).Result;
 
             string? kbId = null;
