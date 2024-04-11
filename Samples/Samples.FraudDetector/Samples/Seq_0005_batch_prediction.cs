@@ -18,7 +18,7 @@ namespace Samples.FraudDetector.Samples
         {
             Console.WriteLine($"Running {this.GetType().Name} ###############");
 
-            using (var fraudDetectorClient = new AmazonFraudDetectorClient())
+            using (var fraudDetectorClient = new AmazonFraudDetectorClient(_credentials))
             {
                 string s3BucketName = "workshop-fraud-detector-xxxxxx";
                 string iamRoleArn = "arn:aws:iam::xxxxx:role/AmazonFraudDetector-DataAccessRole-xxxxxxx";

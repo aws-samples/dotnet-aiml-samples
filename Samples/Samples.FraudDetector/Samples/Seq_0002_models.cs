@@ -15,7 +15,7 @@ namespace Samples.FraudDetector.Samples
         public void Run()
         {
             Console.WriteLine($"Running {this.GetType().Name} ###############");
-            using (var fraudDetectorClient = new AmazonFraudDetectorClient())
+            using (var fraudDetectorClient = new AmazonFraudDetectorClient(_credentials))
             {
                 var createModelTask = fraudDetectorClient.CreateModelAsync(new CreateModelRequest()
                 {
