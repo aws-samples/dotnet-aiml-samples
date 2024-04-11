@@ -9,6 +9,8 @@
 
   <ItemGroup>
     <PackageReference Include="AWSSDK.FraudDetector" Version="3.7.300.66" />
+    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.300.73" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.307.14" />
   </ItemGroup>
 
   <ItemGroup>
