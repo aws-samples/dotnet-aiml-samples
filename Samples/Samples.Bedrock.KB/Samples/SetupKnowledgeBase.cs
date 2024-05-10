@@ -46,6 +46,7 @@ namespace Samples.Bedrock.KB.Samples
             {
                 knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
                 Console.WriteLine($"Knowledge base '{knowledgeBase.KnowledgeBase.Name}' created successfully! The Knowledge base Id is {knowledgeBase.KnowledgeBase.KnowledgeBaseId}");
+                WaitForActive(knowledgeBase, agentClient);
             }
             catch (Exception ex)
             {
@@ -67,6 +68,17 @@ namespace Samples.Bedrock.KB.Samples
 
             Console.WriteLine($"Congratulations! KnowledgeBase '{knowledgeBase.KnowledgeBase.Name}' setup is successfull.");
             Console.WriteLine($"End of {GetType().Name} ############");
+        }
+
+        private static void WaitForActive(CreateKnowledgeBaseResponse knowledgeBase, AmazonBedrockAgentClient agentClient)
+        {
+            var status = knowledgeBase.KnowledgeBase.Status;
+            while (status == "CREATING")
+            {
+                var getKBResponse = agentClient.GetKnowledgeBaseAsync(new GetKnowledgeBaseRequest() { KnowledgeBaseId = knowledgeBase.KnowledgeBase.KnowledgeBaseId }).Result;
+                status = getKBResponse.KnowledgeBase.Status;
+                // Console.WriteLine(status);
+            }
         }
 
         private void DataSyncWithKnowledgeBase(AmazonBedrockAgentClient agentClient, string knowledgeBaseId, string dataSourceId)
