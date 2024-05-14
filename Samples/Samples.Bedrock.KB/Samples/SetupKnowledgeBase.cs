@@ -10,6 +10,7 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Samples.Common;
 using ShellProgressBar;
+using System.Collections.Specialized;
 
 
 namespace Samples.Bedrock.KB.Samples
@@ -56,15 +57,30 @@ namespace Samples.Bedrock.KB.Samples
                 Console.WriteLine($"Knowledge base '{createKBResponse.KnowledgeBase.Name}' created successfully! The Knowledge base Id is {createKBResponse.KnowledgeBase.KnowledgeBaseId}");
                 kbId = createKBResponse.KnowledgeBase.KnowledgeBaseId;
             }
-           
 
             string dataSourceId = LinkDataSourceToKnowledgeBase(existingAWSResources.KBS3Arn, kbId);
+
+            WaitForActive(kbId);
 
             SyncDataWithKnowledgeBase( kbId, dataSourceId);
 
             Console.WriteLine($"Congratulations! KnowledgeBase '{Common.KB_NAME}' setup is successfull.");
 
             Console.WriteLine($"End of {GetType().Name} ############");
+        }
+
+        private  void WaitForActive(string kbId)
+        {
+            KnowledgeBaseStatus kbState = _bedrockAgentClient.GetKnowledgeBaseAsync(new GetKnowledgeBaseRequest() { KnowledgeBaseId = kbId }).Result.KnowledgeBase.Status;
+            
+            while (!String.Equals(kbState.Value, KnowledgeBaseStatus.ACTIVE.Value))
+            {
+                Console.WriteLine($"Knoweldge base with the the id {kbId} still in creating state. Waiting until it is created before syncing data...");
+                Thread.Sleep(5000);
+                kbState = _bedrockAgentClient.GetKnowledgeBaseAsync(new GetKnowledgeBaseRequest() { KnowledgeBaseId = kbId }).Result.KnowledgeBase.Status;
+
+                // Console.WriteLine(status);
+            }
         }
 
         private void SyncDataWithKnowledgeBase(string knowledgeBaseId, string dataSourceId)
@@ -193,16 +209,28 @@ namespace Samples.Bedrock.KB.Samples
             IAmazonOpenSearchServerless opensearchClient = new AmazonOpenSearchServerlessClient(_credentials,Amazon.RegionEndpoint.USWest2);
             var collectionReq = new ListCollectionsRequest
             {
-                CollectionFilters = new CollectionFilters{ Status = CollectionStatus.ACTIVE },
+               
                 MaxResults = 10
             };
             
             var collections = opensearchClient.ListCollectionsAsync(collectionReq).Result;
-            
+           
             var collection = collections.CollectionSummaries.Find(x => x.Name.StartsWith("bedrock-knowledge-base-"));
-            if (collection == null) {
-                throw new Exception("Make sure the open search serverless collection status is 'Active'. It may still be in 'Creating' state. You can check the status at https://us-west-2.console.aws.amazon.com/aos/home?region=us-west-2");
+            if(collection == null)
+            {
+                throw new Exception("Make sure your ran the workshop chapter https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81/en-US/10000-bedrock/10400-knowledge-base/10430-knowledge-base before running this code. It will create an open search serverless cluster needed for this lab");
             }
+            else
+            {
+                while (!String.Equals(collection.Status.Value,CollectionStatus.ACTIVE.Value))
+                {
+                    Console.WriteLine($"Waiting for the open search serverless collection {collection.Name} to be in ACTIVE state. Currently it is in {collection.Status.Value} state...");
+                    Thread.Sleep(5000);
+                    collection = opensearchClient.ListCollectionsAsync(collectionReq).Result.CollectionSummaries.Find(x => x.Name.StartsWith("bedrock-knowledge-base-"));
+                }
+            }
+
+ 
             string collectionArn = collection.Arn;
 
             var client = new AmazonIdentityManagementServiceClient();
