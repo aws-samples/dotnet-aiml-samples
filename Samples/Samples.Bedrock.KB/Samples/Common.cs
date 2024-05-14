@@ -12,5 +12,6 @@ namespace Samples.Bedrock.KB.Samples
         public const string  KB_DATA_SOURCE_NAME = "my-knowledge-base-data-source";
 
 
+
     }
 }

@@ -18,6 +18,7 @@ namespace Samples.Common
             if (!chain.TryGetAWSCredentials(profileName, out awsCredentials))
             {
                 Console.WriteLine($"No profile name {profileName}  is found. Using the default credentials");
+                //This will take the credentials associated with the EC2 instance's IAM role. 
                 awsCredentials = FallbackCredentialsFactory.GetCredentials();
             }
 

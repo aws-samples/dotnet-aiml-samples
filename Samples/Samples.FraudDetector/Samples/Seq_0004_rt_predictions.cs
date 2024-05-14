@@ -15,7 +15,7 @@ namespace Samples.FraudDetector.Samples
 
         private void PredictFraud(string predictionDisplayName, string entityId, Dictionary<string, string> variables)
         {
-            using (var fraudDetectorClient = new AmazonFraudDetectorClient())
+            using (var fraudDetectorClient = new AmazonFraudDetectorClient(_credentials))
             {
                 Console.WriteLine($"Checking event {predictionDisplayName} for fraud ... ");
                 try

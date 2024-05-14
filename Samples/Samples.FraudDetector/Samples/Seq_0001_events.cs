@@ -15,7 +15,7 @@ namespace Samples.FraudDetector.Samples
         public void Run()
         {
             Console.WriteLine($"Running {this.GetType().Name} ###############");
-            using (var fraudDetectorClient = new AmazonFraudDetectorClient())
+            using (var fraudDetectorClient = new AmazonFraudDetectorClient(_credentials))
             {
                 Console.WriteLine($"Creating event type: {Constants.EventTypeName}");
                 var createEventTypeTask = fraudDetectorClient.PutEventTypeAsync(new PutEventTypeRequest()
@@ -26,6 +26,7 @@ namespace Samples.FraudDetector.Samples
                     EntityTypes = new List<string>() { Constants.EntityName },
                     EventOrchestration = new EventOrchestration() { EventBridgeEnabled = true }
                 }).Result;
+              
             }
             Console.WriteLine($"End of {this.GetType().Name} ############");
         }
@@ -36,7 +37,7 @@ namespace Samples.FraudDetector.Samples
         /// </summary>
         private void PreCreate()
         {
-            using (var fraudDetectorClient = new AmazonFraudDetectorClient())
+            using (var fraudDetectorClient = new AmazonFraudDetectorClient(_credentials))
             {
                 // Create variables
                 Parallel.ForEach(Constants.Variables, props =>
