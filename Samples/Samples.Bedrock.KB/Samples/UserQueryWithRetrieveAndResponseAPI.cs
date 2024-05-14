@@ -1,5 +1,7 @@
 ﻿using Amazon.Bedrock;
 using Amazon.Bedrock.Model;
+using Amazon.BedrockAgent;
+using Amazon.BedrockAgent.Model;
 using Amazon.BedrockAgentRuntime;
 using Amazon.BedrockAgentRuntime.Model;
 using Amazon.Runtime;
@@ -20,8 +22,9 @@ namespace Samples.Bedrock.KB.Samples
         {
             Console.WriteLine($"Running {GetType().Name} ###############");
 
-            AmazonBedrockAgentRuntimeClient agentRuntimeClient = new AmazonBedrockAgentRuntimeClient(_credentials, Amazon.RegionEndpoint.USEast1);
-            var knowledgeBaseId = Utility.ReadKeyValuePair("KnowledgeBaseId");
+            AmazonBedrockAgentRuntimeClient agentRuntimeClient = new AmazonBedrockAgentRuntimeClient(_credentials, Amazon.RegionEndpoint.USWest2);
+
+            var knowledgeBaseId = GetKBId();
             GetFoundationModelResponse fmModel = GetFMModel(_credentials, "anthropic.claude-v2:1");
 
             bool keepQuerying = true;
@@ -67,7 +70,7 @@ namespace Samples.Bedrock.KB.Samples
 
         private static GetFoundationModelResponse GetFMModel(AWSCredentials creds, string modelIdentifier)
         {
-            AmazonBedrockClient client = new AmazonBedrockClient(creds, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockClient client = new AmazonBedrockClient(creds, Amazon.RegionEndpoint.USWest2);
             GetFoundationModelRequest getFoundationModelRequest = new GetFoundationModelRequest
             {
                 ModelIdentifier = modelIdentifier
@@ -76,6 +79,21 @@ namespace Samples.Bedrock.KB.Samples
             var result = client.GetFoundationModelAsync(getFoundationModelRequest).Result;
             return result;
         }
+
+        private string GetKBId()
+        {
+            var bedrockAgentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USWest2);
+            var kbList = bedrockAgentClient.ListKnowledgeBasesAsync(new ListKnowledgeBasesRequest() { }).Result;
+            if (kbList.KnowledgeBaseSummaries.Exists(kb => kb.Name.Equals(Common.KB_NAME)))
+            {
+                Console.WriteLine($"Knowledge base with the name {Common.KB_NAME} already exists. We will use it for the subsequent steps.");
+                return kbList.KnowledgeBaseSummaries?.Where(kb => kb.Name.Equals(Common.KB_NAME))?.FirstOrDefault()?.KnowledgeBaseId;
+            }
+            else
+            {
+                throw new InvalidOperationException($"Knowledge base with the name {Common.KB_NAME} does not exist. Please follow the previous lab steps to create the knowledge base with the name {Common.KB_NAME} & sync it with the data sources");
+            }
+        } 
     }
 }
 

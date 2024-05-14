@@ -11,11 +11,13 @@ using Amazon.S3.Model;
 using Samples.Common;
 using ShellProgressBar;
 
+
 namespace Samples.Bedrock.KB.Samples
 {
     // example class where you can setup vector database with Amazon OpenSearch Serverless to store embeddings of Knowledge Database
     internal class SetupKnowledgeBase : ISample
     {
+
         ProgressBarOptions _progressBarOption = new ProgressBarOptions()
         {
             ProgressCharacter = '-',
@@ -26,62 +28,46 @@ namespace Samples.Bedrock.KB.Samples
         };
 
         AWSCredentials _credentials;
+        AmazonBedrockAgentClient _bedrockAgentClient;
 
         internal SetupKnowledgeBase(AWSCredentials aWSCredentials)
         {
             _credentials = aWSCredentials;
+            _bedrockAgentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USWest2);
         }
         public void Run()
         {
             Console.WriteLine($"Running {GetType().Name} ###############");
 
-            GetAWSResourceValues(out string s3Arn, out string collectionArn, out string roleArn);
+            var existingAWSResources=GetExistingAWSResourcesValues();
+         
+            var kbList= _bedrockAgentClient.ListKnowledgeBasesAsync(new ListKnowledgeBasesRequest() { }).Result;
 
-            GetFoundationModelResponse embeddingModel = GetEmbeddingModel(_credentials, "amazon.titan-embed-text-v1");
-            CreateKnowledgeBaseRequest createKnowledgeBaseRequest = CreateKnowledgeBaseConfigurationBuilder(collectionArn, roleArn, embeddingModel.ModelDetails.ModelArn);
-            CreateKnowledgeBaseResponse knowledgeBase = new CreateKnowledgeBaseResponse();
-            AmazonBedrockAgentClient agentClient = new AmazonBedrockAgentClient(_credentials, Amazon.RegionEndpoint.USEast1);
-
-            try
+            string? kbId = null;
+            if (kbList.KnowledgeBaseSummaries.Exists(kb => kb.Name.Equals(Common.KB_NAME)))
             {
-                knowledgeBase = agentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
-                Console.WriteLine($"Knowledge base '{knowledgeBase.KnowledgeBase.Name}' created successfully! The Knowledge base Id is {knowledgeBase.KnowledgeBase.KnowledgeBaseId}");
-                WaitForActive(knowledgeBase, agentClient);
+                Console.WriteLine($"Knowledge base with the name {Common.KB_NAME} already exists. We will use it for the subsequent steps.");
+                kbId = kbList.KnowledgeBaseSummaries?.Where(kb => kb.Name.Equals(Common.KB_NAME))?.FirstOrDefault()?.KnowledgeBaseId;
             }
-            catch (Exception ex)
+            else
             {
-                if (ex.InnerException.Message.Contains("already exists"))
-                {
-                    Console.WriteLine($"KnowledgeBase with name {createKnowledgeBaseRequest.Name} already exists");
-                    Console.WriteLine("Press enter to abort.");
-                    Console.ReadLine();
-                    Environment.Exit(0);
-                }
+                CreateKnowledgeBaseRequest createKnowledgeBaseRequest = BuildCreateKnowledgeBaseRequest(existingAWSResources.OpenSearchCollectionArn, existingAWSResources.RoleArn);
+                CreateKnowledgeBaseResponse createKBResponse = _bedrockAgentClient.CreateKnowledgeBaseAsync(createKnowledgeBaseRequest).Result;
+                Console.WriteLine($"Knowledge base '{createKBResponse.KnowledgeBase.Name}' created successfully! The Knowledge base Id is {createKBResponse.KnowledgeBase.KnowledgeBaseId}");
+                kbId = createKBResponse.KnowledgeBase.KnowledgeBaseId;
             }
+           
 
-            CreateDataSourceResponse dataSource = AddDataSourceToKnowledgeBase(agentClient, s3Arn, knowledgeBase.KnowledgeBase.KnowledgeBaseId);
+            string dataSourceId = LinkDataSourceToKnowledgeBase(existingAWSResources.KBS3Arn, kbId);
 
-            DataSyncWithKnowledgeBase(agentClient, knowledgeBase.KnowledgeBase.KnowledgeBaseId, dataSource.DataSource.DataSourceId);
+            SyncDataWithKnowledgeBase( kbId, dataSourceId);
 
-            // Persist KnowledgeBaseId required for performing user queries
-            Utility.WriteKeyValuePair("KnowledgeBaseId", knowledgeBase.KnowledgeBase.KnowledgeBaseId);
+            Console.WriteLine($"Congratulations! KnowledgeBase '{Common.KB_NAME}' setup is successfull.");
 
-            Console.WriteLine($"Congratulations! KnowledgeBase '{knowledgeBase.KnowledgeBase.Name}' setup is successfull.");
             Console.WriteLine($"End of {GetType().Name} ############");
         }
 
-        private static void WaitForActive(CreateKnowledgeBaseResponse knowledgeBase, AmazonBedrockAgentClient agentClient)
-        {
-            var status = knowledgeBase.KnowledgeBase.Status;
-            while (status == "CREATING")
-            {
-                var getKBResponse = agentClient.GetKnowledgeBaseAsync(new GetKnowledgeBaseRequest() { KnowledgeBaseId = knowledgeBase.KnowledgeBase.KnowledgeBaseId }).Result;
-                status = getKBResponse.KnowledgeBase.Status;
-                // Console.WriteLine(status);
-            }
-        }
-
-        private void DataSyncWithKnowledgeBase(AmazonBedrockAgentClient agentClient, string knowledgeBaseId, string dataSourceId)
+        private void SyncDataWithKnowledgeBase(string knowledgeBaseId, string dataSourceId)
         {
             StartIngestionJobRequest startIngestionJobRequest = new StartIngestionJobRequest
             {
@@ -90,7 +76,7 @@ namespace Samples.Bedrock.KB.Samples
                 Description = "poll job status"
             };
 
-            var startIngestJob = agentClient.StartIngestionJobAsync(startIngestionJobRequest).Result;
+            var startIngestJob = _bedrockAgentClient.StartIngestionJobAsync(startIngestionJobRequest).Result;
 
             GetIngestionJobRequest getIngestionJobRequest = new GetIngestionJobRequest
             {
@@ -99,41 +85,52 @@ namespace Samples.Bedrock.KB.Samples
                 KnowledgeBaseId = knowledgeBaseId
             };
 
-            var jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
+            var jobStatus = _bedrockAgentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
             using (var pbLevel1 = new ProgressBar(100, "Knowledge Data sync in progress", _progressBarOption))
             {
                 while (jobStatus.IngestionJob.Status != IngestionJobStatus.COMPLETE)
                 {
                     Thread.Sleep(1000);
                     pbLevel1.Tick();
-                    jobStatus = agentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
+                    jobStatus = _bedrockAgentClient.GetIngestionJobAsync(getIngestionJobRequest).Result;
                 }
 
                 pbLevel1.Tick(100, "Done");
             }
         }
 
-        private static CreateDataSourceResponse AddDataSourceToKnowledgeBase(AmazonBedrockAgentClient agentClient, string s3Arn, string knowledgeBaseId)
+        private string LinkDataSourceToKnowledgeBase(string s3Arn, string knowledgeBaseId)
         {
-            CreateDataSourceRequest createDataSourceRequest = new CreateDataSourceRequest
+            var dataSources=_bedrockAgentClient.ListDataSourcesAsync(new ListDataSourcesRequest() { KnowledgeBaseId = knowledgeBaseId }).Result;
+            if (dataSources.DataSourceSummaries.Exists(ds => ds.Name == Common.KB_DATA_SOURCE_NAME)) {
+                Console.WriteLine($"Data source with the name {Common.KB_DATA_SOURCE_NAME} already exists. We will use the existing one");
+                //there can be only one data source per knowledge base.
+                return dataSources.DataSourceSummaries.FirstOrDefault().DataSourceId;
+            }
+            else
             {
-                DataSourceConfiguration = new DataSourceConfiguration
+                CreateDataSourceRequest createDataSourceRequest = new CreateDataSourceRequest
                 {
-                    S3Configuration = new S3DataSourceConfiguration { BucketArn = s3Arn },
-                    Type = DataSourceType.S3
-                },
-                Name = "knowledge-base-data-source-1202202401",
-                Description = "knowledge-base-data-source-1202202401",
-                KnowledgeBaseId = knowledgeBaseId
-            };
-
-            var dataSource = agentClient.CreateDataSourceAsync(createDataSourceRequest).Result;
-            Console.WriteLine($"Data source {dataSource.DataSource.Name} linked successfully with Knowledge base Id '{knowledgeBaseId}'");
-            return dataSource;
+                    DataSourceConfiguration = new DataSourceConfiguration
+                    {
+                        S3Configuration = new S3DataSourceConfiguration { BucketArn = s3Arn },
+                        Type = DataSourceType.S3
+                    },
+                    Name = Common.KB_DATA_SOURCE_NAME,
+                    Description = Common.KB_DATA_SOURCE_NAME,
+                    KnowledgeBaseId = knowledgeBaseId
+                };
+                var dataSource = _bedrockAgentClient.CreateDataSourceAsync(createDataSourceRequest).Result;
+                Console.WriteLine($"Data source {dataSource.DataSource.Name} successfully linked with the knowledge base Id '{knowledgeBaseId}'");
+                return dataSource.DataSource.DataSourceId;
+            }
         }
 
-        private static CreateKnowledgeBaseRequest CreateKnowledgeBaseConfigurationBuilder(string collectionArn, string roleArn, string embeddingModelArn)
+        private CreateKnowledgeBaseRequest BuildCreateKnowledgeBaseRequest(string collectionArn, string roleArn)
         {
+            GetFoundationModelResponse embeddingModel = GetEmbeddingModel("amazon.titan-embed-text-v1");
+            string embeddingModelArn = embeddingModel.ModelDetails.ModelArn;
+
             // Build configuration to setup Knowledge Base
             KnowledgeBaseConfiguration knowledgeBaseConfiguration = new KnowledgeBaseConfiguration
             {
@@ -164,8 +161,8 @@ namespace Samples.Bedrock.KB.Samples
 
             CreateKnowledgeBaseRequest createKnowledgeBaseRequest = new CreateKnowledgeBaseRequest
             {
-                Name = "knowledge-base-dotnet-1202202401",
-                Description = "knowledge-base-dotnet-1202202401",
+                Name = Common.KB_NAME,
+                Description = Common.KB_NAME,
                 StorageConfiguration = storageConfiguration,
                 KnowledgeBaseConfiguration = knowledgeBaseConfiguration,
                 RoleArn = roleArn
@@ -173,9 +170,9 @@ namespace Samples.Bedrock.KB.Samples
             return createKnowledgeBaseRequest;
         }
 
-        private static GetFoundationModelResponse GetEmbeddingModel(AWSCredentials creds, string modelIdentifier)
+        private GetFoundationModelResponse GetEmbeddingModel(string modelIdentifier)
         {
-            AmazonBedrockClient client = new AmazonBedrockClient(creds, Amazon.RegionEndpoint.USEast1);
+            AmazonBedrockClient client = new AmazonBedrockClient(_credentials, Amazon.RegionEndpoint.USWest2);
             GetFoundationModelRequest getFoundationModelRequest = new GetFoundationModelRequest
             {
                 ModelIdentifier = modelIdentifier
@@ -184,15 +181,16 @@ namespace Samples.Bedrock.KB.Samples
             return embeddingModel;
         }
 
-        private void GetAWSResourceValues(out string s3Arn, out string collectionArn, out string roleArn)
+        //We are getting all the AWS resources that have been pre-provisioned prior to running this program
+        private (string KBS3Arn, string OpenSearchCollectionArn,string RoleArn) GetExistingAWSResourcesValues()
         {
-            IAmazonS3 s3Client = new AmazonS3Client();
+            IAmazonS3 s3Client = new AmazonS3Client(_credentials,Amazon.RegionEndpoint.USWest2);
             var response = s3Client.ListBucketsAsync().Result;
             List<S3Bucket> s3Buckets = response.Buckets;
-            var bucket = s3Buckets.Find(x => x.BucketName.StartsWith("bedrock-kb-")); //dotnet-bedrock-knowledgebase-
-            s3Arn = "arn:aws:s3:::" + bucket.BucketName;
+            var bucket = s3Buckets.Find(x => x.BucketName.StartsWith("bedrock-kb-")); 
+            string s3Arn = "arn:aws:s3:::" + bucket.BucketName;
 
-            IAmazonOpenSearchServerless opensearchClient = new AmazonOpenSearchServerlessClient();
+            IAmazonOpenSearchServerless opensearchClient = new AmazonOpenSearchServerlessClient(_credentials,Amazon.RegionEndpoint.USWest2);
             var collectionReq = new ListCollectionsRequest
             {
                 CollectionFilters = new CollectionFilters{ Status = CollectionStatus.ACTIVE },
@@ -200,13 +198,18 @@ namespace Samples.Bedrock.KB.Samples
             };
             
             var collections = opensearchClient.ListCollectionsAsync(collectionReq).Result;
-            var collection = collections.CollectionSummaries.Find(x => x.Name.StartsWith("bedrock-knowledge-base-")); //dotnet-bedrock-knowledge-base-
-            collectionArn = collection.Arn;
+            
+            var collection = collections.CollectionSummaries.Find(x => x.Name.StartsWith("bedrock-knowledge-base-"));
+            if (collection == null) {
+                throw new Exception("Make sure the open search serverless collection status is 'Active'. It may still be in 'Creating' state. You can check the status at https://us-west-2.console.aws.amazon.com/aos/home?region=us-west-2");
+            }
+            string collectionArn = collection.Arn;
 
             var client = new AmazonIdentityManagementServiceClient();
             var roleResponse1 = client.ListRolesAsync().Result;
             var role = roleResponse1.Roles.Find(x => x.RoleName.StartsWith("AmazonBedrockExecutionRoleForKnowledgeBase_"));
-            roleArn = role.Arn;
+            string roleArn = role.Arn;
+            return (s3Arn, collectionArn, roleArn);
         }
     }
 }

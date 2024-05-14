@@ -15,7 +15,7 @@ namespace Samples.Polly.Samples
         public void Run()
         {
             Console.WriteLine($"Running {this.GetType().Name} ###############");
-            AmazonPollyClient pollyClient = new AmazonPollyClient(Amazon.RegionEndpoint.USEast1);
+            AmazonPollyClient pollyClient = new AmazonPollyClient(Amazon.RegionEndpoint.USWest2);
             
             SynthesizeSpeechRequest request = new SynthesizeSpeechRequest();
             
