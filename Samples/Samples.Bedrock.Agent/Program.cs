@@ -13,8 +13,8 @@ namespace Samples.Bedrock.Agent
             ISample setupAgent = new SetupAgent(creds);
             ISample invokeAgent = new InvokeAgent(creds);
 
-            //setupAgent.Run();
-            invokeAgent.Run();
+            setupAgent.Run();
+            //invokeAgent.Run();
 
             Console.ReadLine();
         }
