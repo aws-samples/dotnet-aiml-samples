@@ -1,10 +1,14 @@
 # AWS Artificial Intelligence & Machine Learning (AIML) Workshop for .NET Developers
 
-This repository contains sample code for the [.NET AIML workshop] ( https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81). 
+This repository contains sample code for the [AWS .NET AIML workshop](https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81). 
 You need an AWS account to try the labs. If you are a .NET developer interested in exploring how to use AWS Artificial Intelligence & Machine Learning (AIML) to your uses cases feel free to drop an email to *dotnet-aiml at amazon.com*. We can organize an event for your team and provide free AWS accounts to try the labs. 
-
+- [Lab setup guide (prerequisite for all the labs)](https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81/en-US/00100-lab-setup)
 - [Amazon Bedrock for .NET Developers](https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81/en-US/10000-bedrock)
 - [Amazon Polly for .NET Developers](https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81/en-US/21000-polly)
+- [Amazon Fraud Detector for .NET Developers](https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81/en-US/22000-fraud-detector)
+
+# How to get your AWS enviornment ready. 
+You can try the labs in your own account or using an AWS provided account. How to get your lab enviornment ready can be found [here](https://catalog.us-east-1.prod.workshops.aws/workshops/1c7c1fb5-a90a-4183-bc1a-236550876c81/en-US/00100-lab-setup/00110-login-to-lab-account)
 
 # How the projet is organized
 1. In the command prompt, run the following command
