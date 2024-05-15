@@ -22,6 +22,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.FraudDetector", "Sa
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Samples.Bedrock.Agent.LambdaFunction", "Samples.Bedrock.Agent.LambdaFunction\Samples.Bedrock.Agent.LambdaFunction.csproj", "{71A58F6B-CB3E-4AEF-B9F7-373B8A991D50}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Samples.Bedrock.Agent", "Samples.Bedrock.Agent\Samples.Bedrock.Agent.csproj", "{21670C88-DD94-47F7-A0D6-8B5CFFDBAC24}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -56,6 +58,10 @@ Global
 		{71A58F6B-CB3E-4AEF-B9F7-373B8A991D50}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{71A58F6B-CB3E-4AEF-B9F7-373B8A991D50}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{71A58F6B-CB3E-4AEF-B9F7-373B8A991D50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{21670C88-DD94-47F7-A0D6-8B5CFFDBAC24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{21670C88-DD94-47F7-A0D6-8B5CFFDBAC24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{21670C88-DD94-47F7-A0D6-8B5CFFDBAC24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{21670C88-DD94-47F7-A0D6-8B5CFFDBAC24}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
