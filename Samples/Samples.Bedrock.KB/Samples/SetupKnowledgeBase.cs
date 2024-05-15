@@ -10,8 +10,6 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Samples.Common;
 using ShellProgressBar;
-using System.Collections.Specialized;
-
 
 namespace Samples.Bedrock.KB.Samples
 {
