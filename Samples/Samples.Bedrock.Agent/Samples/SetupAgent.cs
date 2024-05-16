@@ -17,7 +17,7 @@ namespace Samples.Bedrock.Agent.Samples
         AmazonBedrockAgentClient _bedrockAgentClient;
         AmazonBedrockAgentRuntimeClient _bedrockAgentRuntimeClient;
         public const string LAMBDA_FUNCTION_NAME = "insuranceagentdotnetfunction";
-        Amazon.RegionEndpoint _regionEndpoint = Amazon.RegionEndpoint.USEast1;
+        Amazon.RegionEndpoint _regionEndpoint = Amazon.RegionEndpoint.USWest2;
 
         internal SetupAgent(AWSCredentials aWSCredentials)
         {

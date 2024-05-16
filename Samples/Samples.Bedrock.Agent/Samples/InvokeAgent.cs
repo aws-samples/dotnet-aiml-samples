@@ -14,7 +14,7 @@ namespace Samples.Bedrock.Agent.Samples
         AWSCredentials _credentials;
         AmazonBedrockAgentClient _bedrockAgentClient;
         AmazonBedrockAgentRuntimeClient _bedrockAgentRuntimeClient;
-        Amazon.RegionEndpoint _regionEndpoint = Amazon.RegionEndpoint.USEast1;
+        Amazon.RegionEndpoint _regionEndpoint = Amazon.RegionEndpoint.USWest2;
 
         internal InvokeAgent(AWSCredentials aWSCredentials)
         {
