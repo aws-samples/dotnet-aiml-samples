@@ -22,14 +22,14 @@ namespace Samples.Translate.Samples
             var contentType = "text/plain";
 
             // This is the input bucket where the documents to be translated are stored.
-            var s3InputUri = "s3://paobar-genai-aidemos/translate/";
+            var s3InputUri = "s3://WORKSHOPBUCKER/translate/input/";
 
             // This is the output bucket where the translated document will be stored.
-            var s3OutputUri = "s3://paobar-genai-aidemos-output/translate/";
+            var s3OutputUri = "s3://WORKSHOPBUCKER/translate/";
 
             // This role must have permissions to read the source bucket and to read and
             // write to the destination bucket where the translated text will be stored.
-            var dataAccessRoleArn = "arn:aws:iam::441756632198:role/aws_translate_role_s3_access";
+            var dataAccessRoleArn = "arn:aws:iam::ACCOUNTID:role/aws_translate_role_s3_access";
 
             var JobName = "ExampleTranslationJob";
 

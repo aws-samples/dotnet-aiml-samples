@@ -19,7 +19,7 @@ namespace Samples.Translate.Samples
 
             AmazonTranslateClient client = new AmazonTranslateClient(_credentials, Amazon.RegionEndpoint.USEast1);
 
-            var jobID = "85ea54dc282fffd96c987528a5b57140";
+            var jobID = "YOURJOBID";
 
             DescribeTextTranslationJobRequest request = new DescribeTextTranslationJobRequest
             {
