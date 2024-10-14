@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AWSSDK.Bedrock" Version="3.7.302.11" />
+    <PackageReference Include="AWSSDK.BedrockAgent" Version="3.7.308.5" />
+    <PackageReference Include="AWSSDK.BedrockAgentRuntime" Version="3.7.306.3" />
+    <PackageReference Include="AWSSDK.BedrockRuntime" Version="3.7.302.11" />
+    <PackageReference Include="AWSSDK.IdentityManagement" Version="3.7.301.17" />
+    <PackageReference Include="AWSSDK.Lambda" Version="3.7.305.23" />
+    <PackageReference Include="AWSSDK.S3" Version="3.7.308" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Samples.Common\Samples.Common.csproj" />
+  </ItemGroup>
+
+</Project>
